@@ -1,0 +1,30 @@
+{
+  "name": "reacter",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Martin0809/reacter.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Martin0809/reacter/issues"
+  },
+  "homepage": "https://github.com/Martin0809/reacter#readme",
+  "dependencies": {
+    "chalk": "^2.0.1",
+    "commander": "^2.11.0",
+    "download-git-repo": "^1.0.1",
+    "inquirer": "^3.2.0",
+    "ora": "^1.3.0"
+  },
+  "bin": {
+    "reacter": "bin/reacter",
+    "reacter-init": "bin/reacter-init"
+  }
+}
