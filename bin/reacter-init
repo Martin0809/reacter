@@ -1,40 +1,37 @@
 #!/usr/bin/env node
 
-const program = require('commander')
-const chalk = require('chalk')
-const path = require('path')
-const exists = require('fs').existsSync
-const inquirer = require('inquirer')
-const download = require('download-git-repo')
-const ora = require('ora')
+const program = require('commander');
+const chalk = require('chalk');
+const path = require('path');
+const exists = require('fs').existsSync;
+const inquirer = require('inquirer');
+const rm = require('rimraf').sync
+const download = require('download-git-repo');
+const ora = require('ora');
 
 program
-  .usage('[project-name]')
+  .usage('[project-name]');
 
 program.on('--help', function () {
-  console.log()
-  console.log()
-  console.log('  Examples:')
-  console.log()
-  console.log(chalk.gray('    # create a new project with an official template'))
-  console.log('    $ react init webpack my-project')
-  console.log()
+  console.log();
+  console.log();
+  console.log('  Examples:');
+  console.log();
+  console.log(chalk.gray('    # create a new project with an official template'));
+  console.log('    $ react init webpack my-project');
+  console.log();
 });
 
-function help () {
-  program.parse(process.argv)
-  if (program.args.length < 1) return program.help()
-}
-help()
+help();
 
-const projectName = program.args[0]
-const inPlace = !projectName || projectName === '.'
-const to = path.resolve(projectName || '.')
-
-console.log()
+console.log();
 process.on('exit', function () {
-  console.log()
-})
+  console.log();
+});
+
+const projectName = program.args[0];
+const inPlace = !projectName || projectName === '.';
+const to = path.join(process.cwd(), projectName);
 
 if (exists(to)) {
   inquirer.prompt([{
@@ -44,43 +41,49 @@ if (exists(to)) {
       ? 'Generate project in current directory?'
       : 'Target directory exists. Continue?'
   }]).then(answers => {
-    if (answers.ok) run()
+    if (answers.ok) run();
   });
 } else {
-  run()
+  run();
+}
+
+function help () {
+  program.parse(process.argv);
+  if (program.args.length < 1) return program.help();
 }
 
 function run() {
   inquirer.prompt([{
     type: 'list',
-    name: 'ok',
+    name: 'config',
     message: 'Which configuration do you need:',
     choices: ['Router', 'Router + Rudex']
   }]).then(answers => {
-    if (answers.ok === 'Router') {
-      downloadAndGenerate('router');
-    } else if (answers.ok === 'Router + Rudex') {
-      downloadAndGenerate('router&redux');
+    if (answers.config === 'Router') {
+      downloadAndGenerate('TP-router');
+    } else if (answers.config === 'Router + Rudex') {
+      downloadAndGenerate('TP-redux');
     }
   });
 }
 
 function downloadAndGenerate(template) {
-  const spinner = ora('downloading template')
+  const spinner = ora('downloading template');
 
-  spinner.start()
-  download(`github:eleme/element-react#${template}`, projectName, { clone: false }, function (err) {
-    spinner.stop()
-    if (err) console.log(err)
-    console.log('')
-    console.log(chalk.white('  react-cli ·'), 'Generated "myapp".')
-    console.log()
-    console.log('  To get started:')
-    console.log()
-    console.log('    cd myapp')
-    console.log('    npm install')
-    console.log('    npm run dev')
-    console.log()
-    console.log('  Example app listening at', chalk.blue('http://localhost:3000'))
-  })
+  spinner.start();
+  if (exists(to)) rm(to);
+  download(`github:Martin0809/reacter#${template}`, projectName, { clone: false }, function (err) {
+    spinner.stop();
+    if (err) console.log(chalk.red(`Failed to download repo github:Martin0809/reacter#${template}` + err.message.trim()));
+    console.log('');
+    console.log(chalk.white('  reacter ·'), 'Generated "myapp".');
+    console.log();
+    console.log('  To get started:');
+    console.log();
+    console.log('    cd myapp');
+    console.log('    npm install');
+    console.log('    npm run dev');
+    console.log();
+    console.log('  Example app listening at', chalk.blue('http://localhost:3000'));
+  });
 }
