@@ -5,9 +5,14 @@ const chalk = require('chalk');
 const path = require('path');
 const exists = require('fs').existsSync;
 const inquirer = require('inquirer');
-const rm = require('rimraf').sync
+const rm = require('rimraf').sync;
 const download = require('download-git-repo');
 const ora = require('ora');
+const Metalsmith = require('metalsmith');
+const Handlebars = require('handlebars');
+const getOptions = require('../lib/options');
+const ask = require('../lib/ask');
+const filter = require('../lib/filter');
 
 program
   .usage('[project-name]');
@@ -18,7 +23,7 @@ program.on('--help', function () {
   console.log('  Examples:');
   console.log();
   console.log(chalk.gray('    # create a new project with an official template'));
-  console.log('    $ react init webpack my-project');
+  console.log('    $ react init my-project');
   console.log();
 });
 
@@ -29,9 +34,10 @@ process.on('exit', function () {
   console.log();
 });
 
-const projectName = program.args[0];
-const inPlace = !projectName || projectName === '.';
-const to = path.join(process.cwd(), projectName);
+const rawName = program.args[0];
+const inPlace = !rawName || rawName === '.';
+const name = inPlace ? path.relative('../', process.cwd()) : rawName
+const to = path.join(process.cwd(), rawName);
 
 if (exists(to)) {
   inquirer.prompt([{
@@ -69,21 +75,98 @@ function run() {
 
 function downloadAndGenerate(template) {
   const spinner = ora('downloading template');
+  const json = path.resolve(to, 'meta.json');
+  const js = path.resolve(to, 'meta.js');
 
   spinner.start();
-  if (exists(to)) rm(to);
-  download(`github:Martin0809/reacter#${template}`, projectName, { clone: false }, function (err) {
+  if (!inPlace && exists(to)) rm(to);
+  download(`github:Martin0809/reacter#${template}`, rawName, { clone: false }, err => {
     spinner.stop();
-    if (err) console.log(chalk.red(`Failed to download repo github:Martin0809/reacter#${template}` + err.message.trim()));
-    console.log('');
-    console.log(chalk.white('  reacter ·'), 'Generated "myapp".');
-    console.log();
-    console.log('  To get started:');
-    console.log();
-    console.log('    cd myapp');
-    console.log('    npm install');
-    console.log('    npm run dev');
-    console.log();
-    console.log('  Example app listening at', chalk.blue('http://localhost:3000'));
+    if (err) console.log(chalk.red(chalk.white('  reacter'), chalk.gray('·'), `Failed to download repo github:Martin0809/reacter#${template}: ` + err.message.trim()));
+    generate(name, to, path.resolve(rawName || '.'), err => {
+      if (err) console.log(chalk.red(chalk.white('  reacter'), chalk.gray('·'), `Failed to download repo github:Martin0809/reacter#${template}: ` + err.message.trim()));
+
+      if (exists(json)) {
+        rm(path.resolve(to, 'meta.json'));
+      } else if (exists(js)) {
+        rm(path.resolve(to, 'meta.js'));
+      }
+
+      console.log('');
+      console.log(chalk.white('  reacter'), chalk.gray('·'), `Generated "${name}".`);
+      console.log();
+      console.log('  To get started:');
+      console.log();
+      if (!inPlace) console.log(`    cd ${name}`);
+      console.log('    npm install');
+      console.log('    npm start');
+      console.log();
+      console.log('  Example app listening at', chalk.blue('http://localhost:3000'));
+    });
   });
+}
+
+function generate(name, src, dest, callback) {
+  const opts = getOptions(name, src);
+  const metalsmith = Metalsmith(path.join(src));
+  const data = Object.assign(metalsmith.metadata(), {
+    destDirName: name,
+    inPlace: dest === process.cwd(),
+    noEscape: true
+  });
+  const helpers = { chalk };
+
+  opts.helpers && Object.keys(opts.helpers).map(key => {
+    Handlebars.registerHelper(key, opts.helpers[key])
+  });
+
+  if (opts.metalsmith && typeof opts.metalsmith.before === 'function') {
+    opts.metalsmith.before(metalsmith, opts, helpers)
+  }
+
+  metalsmith.use(askQuestions(opts.prompts))
+    .use(filterFiles(opts.filters))
+
+  if (typeof opts.metalsmith === 'function') {
+    opts.metalsmith(metalsmith, opts, helpers)
+  } else if (opts.metalsmith && typeof opts.metalsmith.after === 'function') {
+    opts.metalsmith.after(metalsmith, opts, helpers)
+  }
+
+  metalsmith.clean(false)
+    .source('.') // start from template root instead of `./src` which is Metalsmith's default for `source`
+    .destination(dest)
+    .build((err, files) => {
+      callback(err)
+      if (typeof opts.complete === 'function') {
+        const helpers = { chalk, logger, files }
+        opts.complete(data, helpers)
+      } else {
+        // logMessage(opts.completeMessage, data)
+      }
+    })
+
+  return data
+
+  inquirer.prompt([{
+    type: 'input',
+    name: 'config',
+    message: `Project name`,
+    default: name,
+  }]).then(answers => {
+
+    callback()
+  });
+}
+
+function askQuestions(prompts) {
+  return (files, metalsmith, callback) => {
+    ask(prompts, metalsmith.metadata(), callback);
+  }
+}
+
+function filterFiles(filters) {
+  return (files, metalsmith, callback) => {
+    filter(files, filters, metalsmith.metadata(), callback);
+  }
 }
