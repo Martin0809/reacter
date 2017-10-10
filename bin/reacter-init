@@ -10,6 +10,9 @@ const download = require('download-git-repo');
 const ora = require('ora');
 const Metalsmith = require('metalsmith');
 const Handlebars = require('handlebars');
+const async = require('async');
+const render = require('consolidate').handlebars.render;
+const multimatch = require('multimatch');
 const getOptions = require('../lib/options');
 const ask = require('../lib/ask');
 const filter = require('../lib/filter');
@@ -126,6 +129,7 @@ function generate(name, src, dest, callback) {
 
   metalsmith.use(askQuestions(opts.prompts))
     .use(filterFiles(opts.filters))
+    .use(renderTemplateFiles(opts.skipInterpolation));
 
   if (typeof opts.metalsmith === 'function') {
     opts.metalsmith(metalsmith, opts, helpers)
@@ -137,13 +141,11 @@ function generate(name, src, dest, callback) {
     .source('.') // start from template root instead of `./src` which is Metalsmith's default for `source`
     .destination(dest)
     .build((err, files) => {
-      callback(err)
       if (typeof opts.complete === 'function') {
         const helpers = { chalk, logger, files }
         opts.complete(data, helpers)
-      } else {
-        // logMessage(opts.completeMessage, data)
       }
+      callback(err);
     })
 
   return data
@@ -170,3 +172,44 @@ function filterFiles(filters) {
     filter(files, filters, metalsmith.metadata(), callback);
   }
 }
+
+function renderTemplateFiles(skipInterpolation) {
+  skipInterpolation = typeof skipInterpolation === 'string'
+    ? [skipInterpolation]
+    : skipInterpolation;
+  return (files, metalsmith, callback) => {
+    const keys = Object.keys(files);
+    const metalsmithMetadata = metalsmith.metadata();
+    async.each(keys, (file, next) => {
+      if (skipInterpolation && multimatch([file], skipInterpolation, { dot: true }).length) {
+        return next();
+      }
+
+      const str = files[file].contents.toString();
+
+      if (!/{{([^{}]+)}}/g.test(str)) {
+        return next();
+      }
+
+      render(str, metalsmithMetadata, (err, res) => {
+        if (err) {
+          err.message = `[${file}] ${err.message}`;
+          return next(err);
+        }
+        files[file].contents = new Buffer(res);
+        next();
+      });
+    }, callback);
+  }
+}
+
+// function logMessage(message, data) {
+//   if (!message) return;
+//   render(message, data, (err, res) => {
+//     if (err) {
+//       console.error('\n   Error when rendering template complete message: ' + err.message.trim());
+//     } else {
+//       console.log('\n' + res.split(/\r?\n/g).map(line => '   ' + line).join('\n'));
+//     }
+//   });
+// }
