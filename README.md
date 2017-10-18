@@ -1,7 +1,29 @@
-# reacter
+# reacter-cli
 
-## 全局使用
-为了可以全局使用，我们需要在`package.json`里面设置一下:
+> Simple CLI for React projects
+
+## Installation
+
+```bash
+$ npm install -g reacter-cli
+```
+
+## Useage
+
+```bash
+$ reacter init <project-name>
+```
+
+Example:
+
+```bash
+$ reacter init my-app
+$ reacter init . // Generate project in current directory
+```
+
+
+## Contributing
+In order to be able to use the global, we need to set up inside `package.json`:
 
 ```json
 "bin": {
@@ -10,10 +32,10 @@
 },
 ```
 
-本地调试的时候，在根目录下执行
+Local debugging, the implementation of the root directory
 
-```
-npm link
+```bash
+$ npm link
 ```
 
-即可把`reacter`命令绑定到全局，以后就可以直接以`reacter`作为命令开头而无需敲入长长的`node reacter`之类的命令了。
+You can bind the `reacter` command to the global, then you can directly to the` reacter` command as the beginning without typing long `node reacter` like the order.

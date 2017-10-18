@@ -1,5 +1,5 @@
 {
-  "name": "reacter",
+  "name": "reacter-cli",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -10,7 +10,7 @@
     "type": "git",
     "url": "git+https://github.com/Martin0809/reacter.git"
   },
-  "author": "",
+  "author": "martin0809 <maning0809@gmail.com>",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/Martin0809/reacter/issues"
