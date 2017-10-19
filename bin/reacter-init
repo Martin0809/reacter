@@ -69,9 +69,9 @@ function run() {
     choices: ['Router', 'Router + Rudex']
   }]).then(answers => {
     if (answers.config === 'Router') {
-      downloadAndGenerate('TP-router');
+      downloadAndGenerate('reacter-template-router');
     } else if (answers.config === 'Router + Rudex') {
-      downloadAndGenerate('TP-redux');
+      downloadAndGenerate('reacter-template-redux');
     }
   });
 }
@@ -83,11 +83,11 @@ function downloadAndGenerate(template) {
 
   spinner.start();
   if (!inPlace && exists(to)) rm(to);
-  download(`github:Martin0809/reacter#${template}`, rawName, { clone: false }, err => {
+  download(`github:Martin0809/${template}`, rawName, { clone: false }, err => {
     spinner.stop();
-    if (err) console.log(chalk.red(chalk.white('  reacter'), chalk.gray('·'), `Failed to download repo github:Martin0809/reacter#${template}: ` + err.message.trim()));
+    if (err) console.log(chalk.red(chalk.white('  reacter'), chalk.gray('·'), `Failed to download repo github:Martin0809/${template}: ` + err.message.trim()));
     generate(name, to, path.resolve(rawName || '.'), err => {
-      if (err) console.log(chalk.red(chalk.white('  reacter'), chalk.gray('·'), `Failed to download repo github:Martin0809/reacter#${template}: ` + err.message.trim()));
+      if (err) console.log(chalk.red(chalk.white('  reacter'), chalk.gray('·'), `Failed to download repo github:Martin0809/${template}: ` + err.message.trim()));
 
       if (exists(json)) {
         rm(path.resolve(to, 'meta.json'));
