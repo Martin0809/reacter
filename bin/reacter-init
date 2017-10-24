@@ -120,45 +120,35 @@ function generate(name, src, dest, callback) {
   const helpers = { chalk };
 
   opts.helpers && Object.keys(opts.helpers).map(key => {
-    Handlebars.registerHelper(key, opts.helpers[key])
+    Handlebars.registerHelper(key, opts.helpers[key]);
   });
 
   if (opts.metalsmith && typeof opts.metalsmith.before === 'function') {
-    opts.metalsmith.before(metalsmith, opts, helpers)
+    opts.metalsmith.before(metalsmith, opts, helpers);
   }
 
   metalsmith.use(askQuestions(opts.prompts))
-    .use(filterFiles(opts.filters))
+    .use(filterFiles(opts.filters, src))
     .use(renderTemplateFiles(opts.skipInterpolation));
 
   if (typeof opts.metalsmith === 'function') {
-    opts.metalsmith(metalsmith, opts, helpers)
+    opts.metalsmith(metalsmith, opts, helpers);
   } else if (opts.metalsmith && typeof opts.metalsmith.after === 'function') {
-    opts.metalsmith.after(metalsmith, opts, helpers)
+    opts.metalsmith.after(metalsmith, opts, helpers);
   }
 
   metalsmith.clean(false)
-    .source('.') // start from template root instead of `./src` which is Metalsmith's default for `source`
+    .source('.')
     .destination(dest)
     .build((err, files) => {
       if (typeof opts.complete === 'function') {
-        const helpers = { chalk, logger, files }
+        const helpers = { chalk, files }
         opts.complete(data, helpers)
       }
       callback(err);
-    })
+    });
 
-  return data
-
-  inquirer.prompt([{
-    type: 'input',
-    name: 'config',
-    message: `Project name`,
-    default: name,
-  }]).then(answers => {
-
-    callback()
-  });
+  return data;
 }
 
 function askQuestions(prompts) {
@@ -167,9 +157,9 @@ function askQuestions(prompts) {
   }
 }
 
-function filterFiles(filters) {
+function filterFiles(filters, src) {
   return (files, metalsmith, callback) => {
-    filter(files, filters, metalsmith.metadata(), callback);
+    filter(files, filters, metalsmith.metadata(), src, callback);
   }
 }
 
@@ -202,14 +192,3 @@ function renderTemplateFiles(skipInterpolation) {
     }, callback);
   }
 }
-
-// function logMessage(message, data) {
-//   if (!message) return;
-//   render(message, data, (err, res) => {
-//     if (err) {
-//       console.error('\n   Error when rendering template complete message: ' + err.message.trim());
-//     } else {
-//       console.log('\n' + res.split(/\r?\n/g).map(line => '   ' + line).join('\n'));
-//     }
-//   });
-// }

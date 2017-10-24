@@ -2,6 +2,10 @@
   "name": "reacter-cli",
   "version": "1.0.1",
   "description": "Simple CLI for React projects",
+  "keywords": [
+    "React",
+    "cli"
+  ],
   "author": "martin0809 <maning0809@gmail.com>",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
