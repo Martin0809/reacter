@@ -2,7 +2,7 @@
   "name": "reacter-cli",
   "version": "1.0.1",
   "description": "Simple CLI for React projects",
-  "main": "index.js",
+  "author": "martin0809 <maning0809@gmail.com>",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -10,8 +10,7 @@
     "type": "git",
     "url": "git+https://github.com/Martin0809/reacter.git"
   },
-  "author": "martin0809 <maning0809@gmail.com>",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/Martin0809/reacter/issues"
   },

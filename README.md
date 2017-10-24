@@ -21,6 +21,29 @@ $ reacter init my-app
 $ reacter init . // Generate project in current directory
 ```
 
+Directory structure:
+
+```
+├── src
+│   ├── actions             // only use Redux
+│   ├── components          // common components
+│   ├── containers          // page containers
+│   ├── images
+│   ├── reducers            // only use Redux
+│   ├── styles
+│   ├── constants.js        // static variable
+│   └── index.jsx           // entry file
+├── template                // html template
+├── .babelrc                // babel configuration
+├── .editorconfig           // editor configuration
+├── .eslintrc.json          // eslint configuration
+├── .gitignore
+├── package.json
+├── README.md
+├── webpack.config.js       // webpack development environment configuration
+├── webpack.prod.config.js  // webpack produce environment configuration
+```
+
 
 ## Contributing
 In order to be able to use the global, we need to set up inside `package.json`:
